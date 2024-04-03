@@ -10,8 +10,8 @@ tensor1_2rank = tf.constant([[1, 2], [3, 4], [5, 6]], dtype=tf.float32)
 print('Task 4,5', tf.add(tensor0_2rank, tensor1_2rank), '\n')
 
 # Task 6 convert the image into a rank-4 tensor
-img_path_0 = 'C:\\MyData\\Modules\\Computer Vision\\Week 5\\Workshop\\albert.jpg'
-img_path = 'C:\\dog.jpg'
+img_path_0 = 'albert.jpg'
+img_path = 'dog.jpg'
 img_src = cv2.imread(img_path_0)
 if img_src.shape[2] == 3:
     img = cv2.cvtColor(img_src, cv2.COLOR_BGR2GRAY)
