@@ -1,10 +1,11 @@
 Deep learning:
+
   Model Training:
-    CNN:
-        Cifar10
-        Mnist
-    RNN:
+1.	CNN:
+•	Cifar10
+•	Mnist
+2.	RNN:
 
 
-  Tockenizer:
-        GPT2
+3.	Tokenizer:
+•	GPT2
