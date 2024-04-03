@@ -28,13 +28,16 @@ for i in range(25):
 model = Sequential([
     Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(32, 32, 3)),
     MaxPooling2D(pool_size=(2, 2)),
+    Dropout(0.2),
 
     Conv2D(64, kernel_size=(3, 3), activation='relu'),
     MaxPooling2D(pool_size=(2, 2)),
+    Dropout(0.2),
 
     Conv2D(64, kernel_size=(3, 3), activation='relu'),
     # Adding Dense
     Flatten(),
+    Dropout(0.2),
     Dense(64, activation='relu'),
     Dense(10)
 ])
