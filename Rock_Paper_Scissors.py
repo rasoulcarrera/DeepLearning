@@ -1,6 +1,5 @@
 import os
 import tensorflow as tf
-import cv2
 import numpy as np
 from keras.src.callbacks import ReduceLROnPlateau
 from keras.src.legacy.preprocessing.image import ImageDataGenerator
@@ -8,7 +7,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from matplotlib import pyplot as plt
 from keras.preprocessing import image
 
-base_dir = r'C:\MyData\Modules\Computer Vision\CT7160 2024 Assignment\Overall Assignment\Rock_Paper_Scissors'
+base_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors'
 train_dir = os.path.join(base_dir, 'train')
 
 train_datagen = ImageDataGenerator(
@@ -140,29 +139,26 @@ def predict_image(image_upload):
         predict_label = 'Rock'
     else:
         predict_label = 'Scissor'
-    plt.subplot(1, 2, 3)
 
     print('\n')
+    plt.figure(figsize=(4, 4))
+    # plt.subplot(2, 2, 1)
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title(f'Image predicted: {predict_label}')
     plt.show()
     print("\nImage prediction result: ", predict_label)
     print("Probability: ", round(predict_proba * 100, 2), "%")
     print('\n')
 
 
-directory = r'C:\test.png'
+directory = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\paper\testpaper01-00.png'
 #
 # for filename in os.listdir(directory):
 #     filepath = os.path.join(directory, filename)
 # Load the image
 img = image.load_img(directory, target_size=(100, 150))
 
-# Display the image
-# plt.imshow(img)
-# plt.axis('off')
-# plt.show()
-
 x = image.img_to_array(img)
 x = np.expand_dims(x, axis=0)
-
-# Make prediction
 predict_image(x)
