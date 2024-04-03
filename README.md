@@ -4,8 +4,10 @@ Deep learning:
 1.	CNN:
 •	Cifar10
 •	Mnist
-2.	RNN:
+•	Rock Paper Scissors
+
+3.	RNN:
 
 
-3.	Tokenizer:
+4.	Tokenizer:
 •	GPT2
