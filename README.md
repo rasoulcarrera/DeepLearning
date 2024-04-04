@@ -5,7 +5,7 @@ Deep learning:
 •	Cifar10
 •	Mnist
 •	Rock Paper Scissors
-
+img.png
 3.	RNN:
 
 
