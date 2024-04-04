@@ -47,21 +47,21 @@ validation_datagen = ImageDataGenerator(rescale=1.0 / 255,
 
 train_generator = train_datagen.flow_from_directory(
     train_dir,
-    target_size=(100, 150),
+    target_size=(100, 100),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='training')
 
 validation_generator = validation_datagen.flow_from_directory(
     valid_dir,
-    target_size=(100, 150),
+    target_size=(100, 100),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='validation')
 
 # Prepare the Model using Convolutional Neural Network (CNN) architecture
 model = tf.keras.models.Sequential([
-    Conv2D(16, (3, 3), activation='relu', input_shape=(100, 150, 3)),
+    Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)),
     MaxPooling2D(2, 2),
     Dropout(0.3),
 
@@ -122,13 +122,14 @@ def eval_plot(history):
     val_loss_plot, = plt.plot(epochs, val_loss, 'b')
     plt.title('Training and Validation Loss')
     plt.legend([loss_plot, val_loss_plot], ['Training Loss', 'Validation Loss'])
-
+    plt.tight_layout()
+    plt.show()
 
 # Evaluate the Process
 def evaluate(model):
     validation_generator = train_datagen.flow_from_directory(
         train_dir,
-        target_size=(100, 150),
+        target_size=(100, 100),
         batch_size=BATCH_SIZE,
         class_mode='categorical',
         shuffle=False,
@@ -156,7 +157,7 @@ model.save(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
 def predict_image(test_img, model):
     im_array = np.asarray(test_img)
     im_array = im_array * (1 / 225)
-    im_input = tf.reshape(im_array, shape=[1, 100, 150, 3])
+    im_input = tf.reshape(im_array, shape=[1, 100, 100, 3])
 
     predict_proba = np.max(model.predict(im_input)[0])
     predict_class = np.argmax(model.predict(im_input))
@@ -183,6 +184,6 @@ test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
 for filename in os.listdir(test_dir):
     filepath = os.path.join(test_dir, filename)
 
-    img = image.load_img(filepath, target_size=(100, 150))
+    img = image.load_img(filepath, target_size=(100, 100))
 
 # predict_image(img, model)

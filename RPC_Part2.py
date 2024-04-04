@@ -15,7 +15,7 @@ model = tf.keras.models.load_model(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
 def predict_image(test_img, model):
     im_array = np.asarray(test_img)
     im_array = im_array * (1 / 225)
-    im_input = tf.reshape(im_array, shape=[1, 100, 150, 3])
+    im_input = tf.reshape(im_array, shape=[1, 100, 100, 3])
 
     predict_proba = np.max(model.predict(im_input)[0])
     predict_class = np.argmax(model.predict(im_input))
@@ -40,6 +40,6 @@ def predict_image(test_img, model):
 test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
 for filename in os.listdir(test_dir):
     filepath = os.path.join(test_dir, filename)
-    img = image.load_img(filepath, target_size=(100, 150))
+    img = image.load_img(filepath, target_size=(100, 100))
 
     predict_image(img, model)
