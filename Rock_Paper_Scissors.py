@@ -1,18 +1,38 @@
 import os
-import tensorflow as tf
 import numpy as np
-from keras.src.callbacks import ReduceLROnPlateau
+import tensorflow as tf
+from keras.preprocessing import image
 from keras.src.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten
 from keras.src.legacy.preprocessing.image import ImageDataGenerator
+from matplotlib import pyplot as plt, image as mpimg
 from sklearn.metrics import classification_report, confusion_matrix
-from matplotlib import pyplot as plt
-from keras.preprocessing import image
+
+# Part 1
+# a) visualized samples from the dataset, i.e.: rock, paper, scissors hand signs with the appropriate
+# labels
+# b) summary of the model architecture in a form of a plot or text
+# c) model accuracy evaluation plot after the training concludes
+# d) model loss evaluation plot after the training concludes
+
 
 base_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors'
 train_dir = os.path.join(base_dir, 'train')
 valid_dir = os.path.join(base_dir, 'validation')
 BATCH_SIZE = 32
 EPOCHS = 20
+
+# Visualize samples from the dataset
+training_scissors_dir = os.path.join(train_dir, 'rock')
+sample_imgs = os.listdir(training_scissors_dir)
+
+plt.figure(figsize=(20, 6))
+for i, img_path in enumerate(sample_imgs[:20]):
+    sp = plt.subplot(2, 10, i + 1)
+    img = mpimg.imread(os.path.join(training_scissors_dir, img_path))
+    plt.title(f"{sample_imgs[i]}")
+    plt.axis('off')
+    plt.imshow(img)
+plt.show()
 
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
@@ -39,19 +59,19 @@ validation_generator = validation_datagen.flow_from_directory(
     class_mode='categorical',
     subset='validation')
 
-# Prepare the Model
+# Prepare the Model using Convolutional Neural Network (CNN) architecture
 model = tf.keras.models.Sequential([
     Conv2D(16, (3, 3), activation='relu', input_shape=(100, 150, 3)),
     MaxPooling2D(2, 2),
-    Dropout(0.2),
+    Dropout(0.3),
 
     Conv2D(16, (3, 3), activation='relu'),
     MaxPooling2D(2, 2),
-    Dropout(0.2),
+    Dropout(0.3),
 
     Conv2D(32, (3, 3), activation='relu'),
     MaxPooling2D(2, 2),
-    Dropout(0.2),
+    Dropout(0.3),
     Flatten(),
 
     Dense(64, activation='relu'),
@@ -65,6 +85,7 @@ model = tf.keras.models.Sequential([
 #                                             factor=0.5,
 #                                             min_lr=0.000003)
 
+# We compile the model and train it with help of 'model.fit' function
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
@@ -128,6 +149,7 @@ def evaluate(model):
 
 eval_plot(history)
 evaluate(model)
+model.save(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
 
 
 # Prediction Function
@@ -139,7 +161,7 @@ def predict_image(test_img, model):
     predict_proba = np.max(model.predict(im_input)[0])
     predict_class = np.argmax(model.predict(im_input))
 
-    # Map predicted class index to label
+    # Mapping predicted class to the label
     class_labels = ['Paper', 'Rock', 'Scissors']
     predict_label = class_labels[predict_class]
 
@@ -162,7 +184,5 @@ for filename in os.listdir(test_dir):
     filepath = os.path.join(test_dir, filename)
 
     img = image.load_img(filepath, target_size=(100, 150))
-    # x = image.img_to_array(directory)
-    # x = np.expand_dims(x, axis=0)
 
-    predict_image(img, model)
+# predict_image(img, model)
