@@ -18,7 +18,7 @@ image2_path = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\rock9.png'
 
 # Function to load and preprocess images
 def load_and_preprocess_image(image_path):
-    img = image.load_img(image_path, target_size=(100, 150))
+    img = image.load_img(image_path, target_size=(100, 100))
     img_array = image.img_to_array(img)
     img_array /= 255.0  # Normalize pixel values
     return img_array
