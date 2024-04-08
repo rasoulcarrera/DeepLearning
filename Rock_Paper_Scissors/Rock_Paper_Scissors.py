@@ -125,6 +125,7 @@ def eval_plot(history):
     plt.tight_layout()
     plt.show()
 
+
 # Evaluate the Process
 def evaluate(model):
     validation_generator = train_datagen.flow_from_directory(
@@ -180,10 +181,10 @@ def predict_image(test_img, model):
 
 # Load the image & call Prediction
 # directory = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\paper1.png'
-test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
-for filename in os.listdir(test_dir):
-    filepath = os.path.join(test_dir, filename)
-
-    img = image.load_img(filepath, target_size=(100, 100))
+# test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
+# for filename in os.listdir(test_dir):
+#     filepath = os.path.join(test_dir, filename)
+#
+#     img = image.load_img(filepath, target_size=(100, 100))
 
 # predict_image(img, model)
