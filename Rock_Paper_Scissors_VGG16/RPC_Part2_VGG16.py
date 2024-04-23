@@ -10,7 +10,9 @@ from matplotlib import pyplot as plt
 # b) visualisation of the supplied image with the prediction score and predicted label
 
 # Loading the pre-trained model and perform Prediction
-model = tf.keras.models.load_model(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
+model = tf.keras.models.load_model(r'C:\MyData\DeepLearning\RPC_Model.hdf5')
+img_width, img_height = 224, 224
+batch_size = 16
 
 
 def predict_image(image_input, model):
@@ -19,7 +21,7 @@ def predict_image(image_input, model):
         return None
     # img = image.load_img(image_input, target_size=(100, 100))
     img_array = image.img_to_array(img)
-    processed_img = tf.reshape(img_array, shape=[1, 100, 100, 3])
+    processed_img = tf.reshape(img_array, shape=[1, img_width, img_height, 3])
     #
     predict_proba = np.max(model.predict(processed_img)[0])
     predict_class = np.argmax(model.predict(processed_img))
@@ -48,14 +50,17 @@ def predict_image(image_input, model):
     #     predict_image(img, model)
 
 
+# image_path = r'C:\MyData\DeepLearning\Rock-Paper-Scissors\test'
 if __name__ == "__main__":
     image_path = ''
     if len(sys.argv) != 2:
         image_path = input("Enter the path to the image file: ")
-    else:
-        image_path = sys.argv[1]
+        if input() == '':
+            image_path = r'C:\MyData\DeepLearning\Rock-Paper-Scissors\test'
+    # else:
+    #     image_path = sys.argv[1]
     for filename in os.listdir(image_path):
         filepath = os.path.join(image_path, filename)
 
-        img = image.load_img(filepath, target_size=(100, 100))
-    predict_image(img, model)
+        img = image.load_img(filepath, target_size=(img_width, img_height))
+        predict_image(img, model)

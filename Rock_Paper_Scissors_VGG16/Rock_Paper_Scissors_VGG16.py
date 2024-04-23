@@ -1,8 +1,10 @@
 import os
 import numpy as np
-import tensorflow as tf
-from keras.src.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten
+from keras import applications, Model
+from keras.src.callbacks import ReduceLROnPlateau
+from keras.src.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten, BatchNormalization
 from keras.src.legacy.preprocessing.image import ImageDataGenerator
+from keras.src.optimizers import Adam
 from matplotlib import pyplot as plt, image as mpimg
 from sklearn.metrics import classification_report, confusion_matrix
 
@@ -14,15 +16,26 @@ from sklearn.metrics import classification_report, confusion_matrix
 # d) model loss evaluation plot after the training concludes
 
 
-base_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors'
+base_dir = r'C:\MyData\DeepLearning\Rock-Paper-Scissors'
 train_dir = os.path.join(base_dir, 'train')
 valid_dir = os.path.join(base_dir, 'validation')
-BATCH_SIZE = 32
-EPOCHS = 20
+BATCH_SIZE = 128
+EPOCHS = 5
 
 # Visualize samples from the dataset
 training_scissors_dir = os.path.join(train_dir, 'rock')
 sample_imgs = os.listdir(training_scissors_dir)
+
+# Number of training, validation, and test samples
+num_train_samples = 2000
+num_valid_samples = 800
+num_test_samples = 400
+# Image dimensions & Batch size and Optimization + Learning rate
+img_width, img_height = 224, 224
+batch_size = 16
+opt = Adam(learning_rate=0.01)
+# Define a learning rate reduction callback
+# reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
 
 plt.figure(figsize=(20, 6))
 for i, img_path in enumerate(sample_imgs[:20]):
@@ -46,61 +59,46 @@ validation_datagen = ImageDataGenerator(rescale=1.0 / 255,
 
 train_generator = train_datagen.flow_from_directory(
     train_dir,
-    target_size=(100, 100),
+    target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='training')
 
 validation_generator = validation_datagen.flow_from_directory(
     valid_dir,
-    target_size=(100, 100),
+    target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='validation')
 
-# Prepare the Model using Convolutional Neural Network (CNN) architecture
-model = tf.keras.models.Sequential([
-    Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)),
-    MaxPooling2D(2, 2),
-    Dropout(0.3),
+# Load the pre-trained VGG16 model without the top layer
+base_model = applications.VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
 
-    Conv2D(16, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Dropout(0.3),
+# Add custom layers on top of VGG16
+x = Flatten()(base_model.output)
+x = Dense(512, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Dropout(0.5)(x)
+sub_model = Dense(3, activation='sigmoid')(x)
 
-    Conv2D(32, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Dropout(0.3),
+model = Model(inputs=base_model.input, outputs=sub_model)
+model.summary()
 
-    Conv2D(64, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Dropout(0.3),
+# Freeze the pre-trained layers, so they are not updated during training
+for layer in base_model.layers:
+    layer.trainable = False
 
-    Conv2D(128, (3, 3), activation='relu'),
-    MaxPooling2D(2, 2),
-    Dropout(0.3),
-    Flatten(),
-
-    Dense(256, activation='relu'),
-    Dropout(0.2),
-    Dense(3, activation='softmax')
-])
-
-# learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy',
-#                                             patience=2,
-#                                             verbose=1,
-#                                             factor=0.5,
-#                                             min_lr=0.000003)
-
-# We compile the model and train it with help of 'model.fit' function
-model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
+# Compile the model
+model.compile(optimizer=opt,
+              loss='binary_crossentropy',
               metrics=['accuracy'])
 
 history = model.fit(
     train_generator,
+    steps_per_epoch=num_train_samples // batch_size,
     epochs=EPOCHS,
-    validation_data=validation_generator)
+    validation_data=validation_generator,
+    validation_steps=num_valid_samples // batch_size)
 
 
 # callbacks=[learning_rate_reduction])
@@ -137,7 +135,7 @@ def eval_plot(history):
 def evaluate(model):
     validation_generator = train_datagen.flow_from_directory(
         train_dir,
-        target_size=(100, 100),
+        target_size=(img_width, img_height),
         batch_size=BATCH_SIZE,
         class_mode='categorical',
         shuffle=False,
@@ -158,40 +156,4 @@ def evaluate(model):
 
 eval_plot(history)
 evaluate(model)
-model.save(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
-
-
-# Prediction Function
-def predict_image(test_img, model):
-    im_array = np.asarray(test_img)
-    im_array = im_array * (1 / 225)
-    im_input = tf.reshape(im_array, shape=[1, 100, 100, 3])
-
-    predict_proba = np.max(model.predict(im_input)[0])
-    predict_class = np.argmax(model.predict(im_input))
-
-    # Mapping predicted class to the label
-    class_labels = ['Paper', 'Rock', 'Scissors']
-    predict_label = class_labels[predict_class]
-
-    plt.figure(figsize=(4, 4))
-    plt.imshow(test_img)
-    plt.axis('off')
-    plt.title(f'Predicted Class: {predict_label}')
-    plt.show()
-
-    # Print prediction result and probability
-    print("\nImage prediction result:", predict_label)
-    print("Probability:", round(predict_proba * 100, 2), "%")
-    print('\n')
-
-
-# Load the image & call Prediction
-# directory = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\paper1.png'
-# test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
-# for filename in os.listdir(test_dir):
-#     filepath = os.path.join(test_dir, filename)
-#
-#     img = image.load_img(filepath, target_size=(100, 100))
-
-# predict_image(img, model)
+model.save(r'C:\MyData\DeepLearning\RPC_Model.hdf5')
