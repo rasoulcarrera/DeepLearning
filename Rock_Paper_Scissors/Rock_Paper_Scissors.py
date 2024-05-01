@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import tensorflow as tf
-from keras.src.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten
-from keras.src.legacy.preprocessing.image import ImageDataGenerator
+from keras.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten
+from keras.preprocessing.image import ImageDataGenerator
 from matplotlib import pyplot as plt, image as mpimg
 from sklearn.metrics import classification_report, confusion_matrix
 
@@ -14,21 +14,22 @@ from sklearn.metrics import classification_report, confusion_matrix
 # d) model loss evaluation plot after the training concludes
 
 
-base_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors'
+base_dir = '../rpc'
 train_dir = os.path.join(base_dir, 'train')
 valid_dir = os.path.join(base_dir, 'validation')
 BATCH_SIZE = 32
 EPOCHS = 20
+img_width, img_height = 224, 224
 
 # Visualize samples from the dataset
 training_scissors_dir = os.path.join(train_dir, 'rock')
 sample_imgs = os.listdir(training_scissors_dir)
 
-plt.figure(figsize=(20, 6))
-for i, img_path in enumerate(sample_imgs[:20]):
-    sp = plt.subplot(2, 10, i + 1)
+plt.figure(figsize=(6, 2))
+for i, img_path in enumerate(sample_imgs[:5]):
+    sp = plt.subplot(1, 5, i + 1)
     img = mpimg.imread(os.path.join(training_scissors_dir, img_path))
-    plt.title(f"{sample_imgs[i]}")
+    plt.title(f"{sample_imgs[i].title()}")
     plt.axis('off')
     plt.imshow(img)
 plt.show()
@@ -46,21 +47,21 @@ validation_datagen = ImageDataGenerator(rescale=1.0 / 255,
 
 train_generator = train_datagen.flow_from_directory(
     train_dir,
-    target_size=(100, 100),
+    target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='training')
 
 validation_generator = validation_datagen.flow_from_directory(
     valid_dir,
-    target_size=(100, 100),
+    target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='validation')
 
 # Prepare the Model using Convolutional Neural Network (CNN) architecture
 model = tf.keras.models.Sequential([
-    Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)),
+    Conv2D(16, (3, 3), activation='relu', input_shape=(img_width, img_height, 3)),
     MaxPooling2D(2, 2),
     Dropout(0.3),
 
@@ -137,7 +138,7 @@ def eval_plot(history):
 def evaluate(model):
     validation_generator = train_datagen.flow_from_directory(
         train_dir,
-        target_size=(100, 100),
+        target_size=(img_width, img_height),
         batch_size=BATCH_SIZE,
         class_mode='categorical',
         shuffle=False,
@@ -159,39 +160,3 @@ def evaluate(model):
 eval_plot(history)
 evaluate(model)
 model.save(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
-
-
-# Prediction Function
-def predict_image(test_img, model):
-    im_array = np.asarray(test_img)
-    im_array = im_array * (1 / 225)
-    im_input = tf.reshape(im_array, shape=[1, 100, 100, 3])
-
-    predict_proba = np.max(model.predict(im_input)[0])
-    predict_class = np.argmax(model.predict(im_input))
-
-    # Mapping predicted class to the label
-    class_labels = ['Paper', 'Rock', 'Scissors']
-    predict_label = class_labels[predict_class]
-
-    plt.figure(figsize=(4, 4))
-    plt.imshow(test_img)
-    plt.axis('off')
-    plt.title(f'Predicted Class: {predict_label}')
-    plt.show()
-
-    # Print prediction result and probability
-    print("\nImage prediction result:", predict_label)
-    print("Probability:", round(predict_proba * 100, 2), "%")
-    print('\n')
-
-
-# Load the image & call Prediction
-# directory = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\paper1.png'
-# test_dir = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test'
-# for filename in os.listdir(test_dir):
-#     filepath = os.path.join(test_dir, filename)
-#
-#     img = image.load_img(filepath, target_size=(100, 100))
-
-# predict_image(img, model)

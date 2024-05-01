@@ -14,11 +14,12 @@ model = tf.keras.models.load_model(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
 class_labels = ['rock', 'paper', 'scissors']
 image1_path = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\paper1.png'
 image2_path = r'C:\MyData\Tensorflow\Rock-Paper-Scissors\test\rock9.png'
+img_width, img_height = 224, 224
 
 
 # Function to load and preprocess images
 def load_and_preprocess_image(image_path):
-    img = image.load_img(image_path, target_size=(100, 100))
+    img = image.load_img(image_path, target_size=(img_width, img_height))
     img_array = image.img_to_array(img)
     img_array /= 255.0  # Normalize pixel values
     return img_array

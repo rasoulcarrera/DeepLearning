@@ -1,6 +1,4 @@
-import os
 import random
-import sys
 
 
 def gcd(a, b):
@@ -113,16 +111,26 @@ def load_private_key(filename):
 if __name__ == "__main__":
     bits = 1024
     public_key, private_key = generate_keypair(bits)
+    while True:
 
-    userInput = input("for Encrypting, input TEXT\nfor Decrypting, enter 0: ")
-    if userInput != '0':
-        encrypted_message = encrypt(public_key, userInput)
-        save_private_key(private_key, '../private_key.txt')
-        print("Encrypted message:", encrypted_message)
+        userInput = input(
+            "for Encrypting, input TEXT\nfor Decrypting, enter '0'\nfor changing bits length, enter 'bits': ")
 
-    else:
-        userMessage = input("Please enter your message to decrypt: ")
-        ciphertext = [int(char) for char in userMessage.split(',') if char.strip()]
-        loaded_private_key = load_private_key('../private_key.txt')
-        decrypted_message = decrypt(loaded_private_key, ciphertext)
-        print("Decrypted message:", decrypted_message)
+        if userInput != '0' and userInput != 'bits' and userInput != '':
+            encrypted_message = encrypt(public_key, userInput)
+            save_private_key(private_key, '../private_key.txt')
+            print("Encrypted message:", encrypted_message)
+
+        elif userInput == 'bits':
+            bits = int(input("Enter bits length:"))
+            public_key, private_key = generate_keypair(bits)
+
+        elif userInput == '':
+            exit()
+
+        else:
+            userMessage = input("Please enter your message to decrypt: ")
+            ciphertext = [int(char) for char in userMessage.split(',') if char.strip()]
+            loaded_private_key = load_private_key('../private_key.txt')
+            decrypted_message = decrypt(loaded_private_key, ciphertext)
+            print("Decrypted message:", decrypted_message)
