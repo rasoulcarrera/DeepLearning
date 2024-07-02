@@ -1,6 +1,5 @@
 import os
 import random
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -11,14 +10,13 @@ from keras_preprocessing import image
 # b) Predict the labels of the two images
 # c) Output which image won the rock, paper, scissor game
 
-# Loading the pre-trained model
+# Loading the pre-trained model/best saved weight and perform Prediction
+# vgg16_model = tf.keras.models.load_model('../Rock_Paper_Scissors_VGG16/RPS_Model.hdf5')
+vgg16_model = tf.keras.models.load_model('../Rock_Paper_Scissors_VGG16/best_weights.hdf5')
 img_width, img_height = 224, 224
-model = tf.keras.models.load_model('../RPC_Model.hdf5')
 # Define labels and Image addresses
-class_labels = ['rock', 'paper', 'scissors']
-# image1_path = r'C:\MyData\DeepLearning\rpc\test\paper1.png'
-# image2_path = r'C:\MyData\DeepLearning\rpc\test\rock9.png'
-folder_path = '../rpc/test'
+class_labels = ['paper', 'rock', 'scissors']
+folder_path = '../rps/test'
 
 
 # Get a random Image from Folder
@@ -34,37 +32,56 @@ def load_and_preprocess_image(image_path):
     img = image.load_img(image_path, target_size=(img_width, img_height))
     img_array = image.img_to_array(img)
     img_array /= 255.0  # Normalize pixel values
+
     return img_array
 
 
-# Read and preprocess the images
+# A simple condition/rules to decide who’s the winner
+def whos_winner(first_image, second_image):
+    winner = ''
+    if first_image == second_image:
+        winner = "Tie!!"
+
+    elif (first_image == 'rock' and second_image == 'scissors' or
+          first_image == 'scissors' and second_image == 'rock'):
+        winner = "Rock wins"
+
+    elif (first_image == 'rock' and second_image == 'paper' or
+          first_image == 'paper' and second_image == 'rock'):
+        winner = "Paper wins"
+
+    elif (first_image == 'paper' and second_image == 'scissors' or
+          first_image == 'scissors' and second_image == 'paper'):
+        winner = "Scissors wins"
+
+    return winner
+
+
+# Read and preprocess the images and put 2 images in separate variables
 image1 = load_and_preprocess_image(selectRandomPicture(folder_path))
 image2 = load_and_preprocess_image(selectRandomPicture(folder_path))
 
 # Predict the labels of the images
 images = np.array([image1, image2])
-predictions = model.predict(images)
+predictions = vgg16_model.predict(images)
 predicted_classes = np.argmax(predictions, axis=1)
+
+firs_img = class_labels[predicted_classes[0]]
+sec_img = class_labels[predicted_classes[1]]
+
 # Plot the images
 plt.figure(figsize=(8, 5))
-
 plt.subplot(1, 2, 1)
 plt.imshow(image1)
 plt.title(class_labels[predicted_classes[0]])
 plt.axis('off')
-
+# Plot/Display the last result
 plt.subplot(1, 2, 2)
 plt.imshow(image2)
 plt.title(class_labels[predicted_classes[1]])
 plt.axis('off')
-
 plt.tight_layout()
+plt.suptitle(f'{whos_winner(firs_img, sec_img)}!')
 plt.show()
 
-print("Predicted Image 1:", class_labels[predicted_classes[0]])
-print("Predicted Image 2:", class_labels[predicted_classes[1]])
-
-# Determine the winner of the rock, paper, scissors game
-winner_index = np.argmax(predictions.sum(axis=0))
-winner_label = class_labels[winner_index]
-print("Winner is: ", winner_label)
+print(f'The winner is:{whos_winner(firs_img, sec_img)}')

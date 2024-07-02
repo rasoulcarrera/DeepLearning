@@ -1,155 +1,147 @@
 import os
 import numpy as np
-from keras import applications, Model, Sequential
-# from keras.src.callbacks import ReduceLROnPlateau, TensorBoard, EarlyStopping, ModelCheckpoint
-from keras.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten, BatchNormalization, GlobalAveragePooling2D
-from keras.preprocessing.image import ImageDataGenerator
+from keras import applications, Sequential
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from keras.layers import Dense, Dropout, Flatten, BatchNormalization
 from keras.optimizers import Adam, SGD
-from matplotlib import pyplot as plt, image as mpimg
+from keras.preprocessing.image import ImageDataGenerator
+from keras.regularizers import l2
+from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
-# from keras import callbacks
 
 # Part 1
-# a) visualized samples from the dataset, i.e.: rock, paper, scissors hand signs with the appropriate
-# labels
+# a) visualized samples from the dataset, i.e.: rock, paper, scissors hand signs
+# with the appropriate labels
 # b) summary of the model architecture in a form of a plot or text
 # c) model accuracy evaluation plot after the training concludes
 # d) model loss evaluation plot after the training concludes
 
 
-base_dir = '../rpc'
+# Image directory's and defining the dimensions & Batch size as well as epochs
+base_dir = '../rps'
 train_dir = os.path.join(base_dir, 'train')
 valid_dir = os.path.join(base_dir, 'validation')
 BATCH_SIZE = 32
-EPOCHS = 4
-# Number of training, validation, and test samples
-num_train_samples = 2000
-num_valid_samples = 800
-num_test_samples = 400
-
-# Visualize samples from the dataset
-training_scissors_dir = os.path.join(train_dir, 'rock')
-sample_imgs = os.listdir(training_scissors_dir)
-
-# Image dimensions & Batch size and Optimization + Learning rate
+EPOCHS = 7
 img_width, img_height = 224, 224
-opt = Adam(learning_rate=0.01)
-opt1 = SGD(learning_rate=1e-4, momentum=0.99)
-opt2 = Adam(learning_rate=2e-4)
-# Define a learning rate reduction callback
-# reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
+# Define L2 regularization coefficient to prevent overfitting
+l2_reg = 0.00001
 
-plt.figure(figsize=(6, 2))
-for i, img_path in enumerate(sample_imgs[:5]):
-    sp = plt.subplot(1, 5, i + 1)
-    img = mpimg.imread(os.path.join(training_scissors_dir, img_path))
-    plt.title(f"{sample_imgs[i].title()}")
-    plt.axis('off')
-    plt.imshow(img)
-plt.show()
+# Optimization + Learning rate variables
+opt = Adam(learning_rate=1e-4)
+opt1 = Adam(learning_rate=2e-4)
+opt2 = Adam(learning_rate=0.0001)
+opt3 = SGD(learning_rate=1e-4, momentum=0.99)
 
+# Preparing the Train/Validation and Augmentation Data
 train_datagen = ImageDataGenerator(
-    rescale=1. / 255,
-    rotation_range=20,
-    horizontal_flip=True,
+    rescale=1.0 / 255,
+    rotation_range=90,
+    zoom_range=0.1,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
     shear_range=0.2,
-    # vertical_flip=True,
+    # horizontal_flip=True,
+    vertical_flip=True,
+    brightness_range=(0.2, 1),
     fill_mode='nearest',
     validation_split=0.2)
 
 train_generator = train_datagen.flow_from_directory(
     train_dir,
+    shuffle=True,
     target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
     class_mode='categorical',
     subset='training')
 
-validation_datagen = ImageDataGenerator(rescale=1.0 / 255,
-                                        validation_split=0.3)
+# a) Visualize samples from the dataset
+class_names = ['paper', 'rock', 'scissors']
+images, labels = train_generator.next()
+plt.figure(figsize=(10, 10))
+for i in range(9):
+    plt.subplot(3, 3, i + 1)
+    label_index = np.argmax(labels[i])
+    plt.title('Label: ' + class_names[label_index])
+    plt.imshow(images[i])
+    plt.tight_layout()
+    plt.axis('off')
+plt.show()
 
+validation_datagen = ImageDataGenerator(rescale=1.0 / 255)
 validation_generator = validation_datagen.flow_from_directory(
     valid_dir,
     target_size=(img_width, img_height),
     batch_size=BATCH_SIZE,
-    class_mode='categorical',
-    subset='validation')
+    class_mode='categorical')
 
 # -------Callbacks-------------#
-# best_model_weights = './base.model'
-# checkpoint =  ModelCheckpoint(
-#     best_model_weights,
-#     monitor='val_loss',
-#     verbose=1,
-#     save_best_only=True,
-#     mode='min',
-#     save_weights_only=False
-#     #period=1
-# )
-# earlystop = EarlyStopping(
-#     monitor='val_loss',
-#     min_delta=0.001,
-#     patience=10,
-#     verbose=1,
-#     mode='auto'
-# )
-# tensorboard = TensorBoard(
-#     log_dir='./logs',
-#     histogram_freq=0,
-#     batch_size=16,
-#     write_graph=True,
-#     write_grads=True,
-#     write_images=False,
-# )
-#
-# # csvlogger = CSVLogger(
-# #     filename="training_csv.log",
-# #     separator=",",
-# #     append=False
-# # )
-# reduce = ReduceLROnPlateau(
-#     monitor='val_loss',
-#     factor=0.5,
-#     patience=40,
-#     verbose=1,
-#     mode='auto',
-#     cooldown=1
-# )
+# It'll save the best trained weight
+checkpoint = ModelCheckpoint(
+    filepath='best_weights.hdf5',
+    monitor='val_loss',
+    verbose=1,
+    save_best_only=True,
+    mode='min',
+    save_weights_only=False
+)
+# Early stop = in case of high Validation Loss
+early_stop = EarlyStopping(
+    monitor='val_loss',
+    min_delta=0.001,
+    patience=5,
+    verbose=1,
+    mode='auto'
+)
+# Defining a learning rate reduction callback when its necessary it'll reduce
+#  the learning rate when its necessary
+lr_reduction = ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.2,
+    patience=2,
+    verbose=1,
+    mode='auto',
+    cooldown=1,
+    min_lr=0.000001
+)
+callbacks = [checkpoint, early_stop, lr_reduction]
 
-# callbacks = [checkpoint, tensorboard, reduce]
 # Load the pre-trained VGG16 model without the top layer
-base_model = applications.VGG16(weights='imagenet', include_top=False, input_shape=(img_width, img_height, 3))
+base_model = applications.VGG16(weights='imagenet', include_top=False, pooling='max',
+                                input_shape=(img_width, img_height, 3))
 
-
-# Freeze the pre-trained layers, so they are not updated during training
-for layer in base_model.layers[:3]:
+# Freeze the pre-trained layers from 0-14,
+# so they are not updated during training
+for layer in base_model.layers[:10]:
     layer.trainable = False
+# b) summary of base model
+base_model.summary()
 
-# Add custom layers on top of VGG16
-# MaxPooling2D()
-x = Flatten()(base_model.output)
-x = Dense(512, activation='relu')(x)
-x = BatchNormalization()(x)
-x = Dropout(0.4)(x)
-sub_model = Dense(3, activation='softmax')(x)
-
-
-model = Model(inputs=base_model.input, outputs=sub_model)
+# Adding custom layers on top of VGG16
+model = Sequential()
+model.add(base_model)
+model.add(Flatten())
+model.add(Dense(512, activation='relu', kernel_regularizer=l2(l2_reg)))
+model.add(BatchNormalization())
+model.add(Dropout(0.3))
+model.add(Dense(3, activation='softmax', kernel_regularizer=l2(l2_reg)))
+# b) summary of model
 model.summary()
 
 # Compile the model
-model.compile(optimizer=opt1,
-              loss='binary_crossentropy',
+model.compile(optimizer=opt,
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
 
+# Finally we train the model with our desired adjustments
 history = model.fit(
     train_generator,
     epochs=EPOCHS,
+    callbacks=callbacks,
     validation_data=validation_generator)
-    # steps_per_epoch=num_train_samples // BATCH_SIZE,
-    # validation_steps=num_valid_samples // BATCH_SIZE)
 
 
-# Plotting the Model
+# Plotting the Models 'accuracy' & 'loss'
 def eval_plot(history):
     plt.figure(figsize=(14, 5))
 
@@ -176,21 +168,19 @@ def eval_plot(history):
     plt.show()
 
 
-# Evaluate the Process
+# Evaluate the Process to find out how well the model has been trained
 def evaluate(model):
     num_of_test_samples = len(validation_generator.filenames)
 
     y_pred = model.predict(validation_generator, num_of_test_samples // BATCH_SIZE + 1)
     y_pred = np.argmax(y_pred, axis=1)
-
     print('\nConfusion Matrix\n')
     print(confusion_matrix(validation_generator.classes, y_pred))
-
     print('\n\nClassification Report\n')
-    target_names = ['Rock', 'Paper', 'Scissors']
+    target_names = ['Paper', 'Rock', 'Scissors']
     print(classification_report(validation_generator.classes, y_pred, target_names=target_names))
 
 
 eval_plot(history)
 evaluate(model)
-model.save('../RPC_Model.hdf5')
+model.save('../Rock_Paper_Scissors_VGG16/RPS_Model.hdf5')

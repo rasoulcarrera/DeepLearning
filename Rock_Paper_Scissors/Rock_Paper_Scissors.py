@@ -1,4 +1,6 @@
 import os
+import random
+
 import numpy as np
 import tensorflow as tf
 from keras.layers import MaxPooling2D, Dense, Dropout, Conv2D, Flatten
@@ -14,7 +16,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 # d) model loss evaluation plot after the training concludes
 
 
-base_dir = '../rpc'
+base_dir = '../rps'
 train_dir = os.path.join(base_dir, 'train')
 valid_dir = os.path.join(base_dir, 'validation')
 BATCH_SIZE = 32
@@ -22,28 +24,30 @@ EPOCHS = 20
 img_width, img_height = 224, 224
 
 # Visualize samples from the dataset
-training_scissors_dir = os.path.join(train_dir, 'rock')
-sample_imgs = os.listdir(training_scissors_dir)
+test_dir = os.path.join(base_dir, 'test')
+random_images = random.sample(os.listdir(test_dir), 10)
 
-plt.figure(figsize=(6, 2))
-for i, img_path in enumerate(sample_imgs[:5]):
+plt.figure(figsize=(8, 2))
+for i, img_path in enumerate(random_images[:5]):
     sp = plt.subplot(1, 5, i + 1)
-    img = mpimg.imread(os.path.join(training_scissors_dir, img_path))
-    plt.title(f"{sample_imgs[i].title()}")
+    img = mpimg.imread(os.path.join(test_dir, img_path))
+    plt.title(f"{random_images[i].title()}")
     plt.axis('off')
     plt.imshow(img)
 plt.show()
 
+# Preparing the Train/Validation and Augmentation Data
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
-    rotation_range=20,
+    rotation_range=90,
     horizontal_flip=True,
     shear_range=0.2,
+    vertical_flip=True,
     fill_mode='nearest',
-    validation_split=0.4)
+    validation_split=0.2)
 
 validation_datagen = ImageDataGenerator(rescale=1.0 / 255,
-                                        validation_split=0.4)
+                                        validation_split=0.2)
 
 train_generator = train_datagen.flow_from_directory(
     train_dir,
@@ -80,9 +84,13 @@ model = tf.keras.models.Sequential([
     Conv2D(128, (3, 3), activation='relu'),
     MaxPooling2D(2, 2),
     Dropout(0.3),
+
+    Conv2D(256, (3, 3), activation='relu'),
+    MaxPooling2D(2, 2),
+    Dropout(0.3),
     Flatten(),
 
-    Dense(256, activation='relu'),
+    Dense(512, activation='relu'),
     Dropout(0.2),
     Dense(3, activation='softmax')
 ])
@@ -159,4 +167,4 @@ def evaluate(model):
 
 eval_plot(history)
 evaluate(model)
-model.save(r'C:\MyData\Tensorflow\RPC_Model.hdf5')
+model.save('../Rock_Paper_Scissors/RPC_Model.hdf5')

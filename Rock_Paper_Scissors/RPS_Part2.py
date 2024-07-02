@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 # b) visualisation of the supplied image with the prediction score and predicted label
 
 # Loading the pre-trained model and perform Prediction
-model = tf.keras.models.load_model('../RPC_Model.hdf5')
+model = tf.keras.models.load_model('../Rock_Paper_Scissors/RPC_Model.hdf5')
 img_width, img_height = 224, 224
 
 
@@ -19,7 +19,7 @@ def predict_image(image_input, model):
         print("Invalid type")
         return None
     # img = image.load_img(image_input, target_size=(100, 100))
-    img_array = image.img_to_array(img)
+    img_array = image.img_to_array(image_input)
     processed_img = tf.reshape(img_array, shape=[1, img_width, img_height, 3])
     #
     predict_proba = np.max(model.predict(processed_img)[0])
@@ -40,25 +40,17 @@ def predict_image(image_input, model):
     print("Probability:", round(predict_proba * 100, 2), "%")
     print('\n')
 
-    # Load the image & call Prediction
-    # test_dir = r'C:\MyData\Tensorflow\rpc\test'
-    # for filename in os.listdir(test_dir):
-    #     filepath = os.path.join(test_dir, filename)
-    #     img = image.load_img(filepath, target_size=(100, 100))
-    #
-    #     predict_image(img, model)
 
-
-# image_path = r'C:\MyData\DeepLearning\rpc\test'
+# image_path = r'C:\MyData\DeepLearning\rps\test'
 if __name__ == "__main__":
     image_path = ''
     if len(sys.argv) != 2:
         image_path = input("Enter the path to the image file: ")
         if input() == '':
-            image_path = '../rpc/test'
+            image_path = '../rps/test'
     # else:
     #     image_path = sys.argv[1]
-    for filename in os.listdir(image_path):
+    for filename in os.listdir(image_path)[0:30]:
         filepath = os.path.join(image_path, filename)
 
         img = image.load_img(filepath, target_size=(img_width, img_height))
