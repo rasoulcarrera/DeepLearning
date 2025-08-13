@@ -41,7 +41,6 @@ def predict_image(image_input, model):
     print('\n')
 
 
-# image_path = r'C:\MyData\DeepLearning\rps\test'
 if __name__ == "__main__":
     image_path = ''
     if len(sys.argv) != 2:
