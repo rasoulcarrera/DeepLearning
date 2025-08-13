@@ -11,9 +11,9 @@ from tensorflow.python.keras import optimizers
 from tqdm import tqdm
 
 # Paths
-train_path = r'C:\MyData\Model\catvsdog\train'
-valid_path = r'C:\MyData\Model\catvsdog\train'
-test_path = r'C:\MyData\Model\catvsdog\test\1'
+train_path = r'...\train'
+valid_path = r'...\train'
+test_path = r'...\test\1'
 
 # Number of training, validation, and test samples
 num_train_samples = 2000
