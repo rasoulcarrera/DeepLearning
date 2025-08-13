@@ -10,9 +10,9 @@ from tqdm import tqdm
 from keras import applications, Model
 
 # Path to the directories containing your data
-train_path = r'C:\MyData\Model\catvsdog\train'
-valid_path = r'C:\MyData\Model\catvsdog\train'
-test_path = r'C:\MyData\Model\catvsdog\test'
+train_path = r'...\train'
+valid_path = r'...\train'
+test_path = r'...\test'
 
 # Number of training, validation, and test samples
 num_train_samples = 2000
@@ -21,8 +21,6 @@ num_test_samples = 400
 opt = Adam(learning_rate=0.01)
 
 # path to the model weights files.
-# weights_path = r'C:\MyData\Model\catvsdog\VGG16\vgg16_weights.h5'
-# top_model_weights_path = r'C:\MyData\Model\catvsdog\VGG16\fc_model.h5'
 # Image dimensions
 img_width, img_height = 224, 224
 batch_size = 16
